@@ -5,12 +5,11 @@ namespace Clones
 {
 	public class CloneVersionSystem : ICloneVersionSystem
 	{
-		private readonly List<CloneData> CloneDatabase;
+		private readonly List<CloneData> _cloneDatabase = new List<CloneData>();
 
 		public CloneVersionSystem()
 		{
-			CloneDatabase = new List<CloneData>();
-			CloneDatabase.Add(new CloneData());
+			_cloneDatabase.Add(new CloneData());
 		}
 		
 		public string Execute(string query)
@@ -21,20 +20,20 @@ namespace Clones
 			switch (command)
 			{
 				case "rollback":
-					CloneDatabase[cloneNumber].Rollback();
+					_cloneDatabase[cloneNumber].Rollback();
 					break;
 				case "relearn":
-					CloneDatabase[cloneNumber].Relearn();
+					_cloneDatabase[cloneNumber].Relearn();
 					break;
 				case "check":
-					return CloneDatabase[cloneNumber].Check();
+					return _cloneDatabase[cloneNumber].Check();
 				case "clone":
-					var newClone = CloneDatabase[cloneNumber].Clone();
-					CloneDatabase.Add(newClone);
+					var newClone = _cloneDatabase[cloneNumber].Clone();
+					_cloneDatabase.Add(newClone);
 					break;
 				case "learn":
 					var skillNumber = int.Parse(parsedQuery[2]);
-					CloneDatabase[cloneNumber].Learn(skillNumber);
+					_cloneDatabase[cloneNumber].Learn(skillNumber);
 					break;
 			}
 			return null;
@@ -43,62 +42,51 @@ namespace Clones
 
 	class CloneData
 	{
-		private readonly Stack<int> ObtainedSkills;
-		private readonly Stack<int> RollbackSkills;
+		private readonly Stack<int> _obtainedSkills;
+		private readonly Stack<int> _rollbackSkills;
 		
 		public CloneData()
 		{
-			ObtainedSkills = new Stack<int>();
-			RollbackSkills = new Stack<int>();
+			_obtainedSkills = new Stack<int>();
+			_rollbackSkills = new Stack<int>();
 		}
 
 		public CloneData(Stack<int> obtainedSkills, Stack<int> rollbackSkills)
 		{
-			ObtainedSkills = obtainedSkills;
-			RollbackSkills = rollbackSkills;
+			_obtainedSkills = obtainedSkills;
+			_rollbackSkills = rollbackSkills;
 		}
 
 		public void Learn(int skillNumber)
 		{
-			ObtainedSkills.Push(skillNumber);
-			RollbackSkills.Clear();
+			_obtainedSkills.Push(skillNumber);
+			_rollbackSkills.Clear();
 		}
 
 		public void Rollback()
 		{
-			var skillNumber = ObtainedSkills.Pop();
-			RollbackSkills.Push(skillNumber);
+			var skillNumber = _obtainedSkills.Pop();
+			_rollbackSkills.Push(skillNumber);
 		}
 
 		public void Relearn()
 		{
-			var skillNumber = RollbackSkills.Pop();
-			ObtainedSkills.Push(skillNumber);
+			var skillNumber = _rollbackSkills.Pop();
+			_obtainedSkills.Push(skillNumber);
 		}
 
 		public CloneData Clone()
 		{
-			return new CloneData(ObtainedSkills.Clone(), RollbackSkills.Clone());
+			return new CloneData(_obtainedSkills.Clone(), _rollbackSkills.Clone());
 		}
 
 		public string Check()
 		{
-			if (ObtainedSkills.Count != 0)
-				return ObtainedSkills.Peek().ToString();
+			if (_obtainedSkills.Count != 0)
+				return _obtainedSkills.Peek().ToString();
 			return "basic";
 		}
 	}
-	
-	// public static class StackExtensions
-	// {
-	// 	public static Stack<T> Clone<T>(this Stack<T> original)
-	// 	{
-	// 		var arr = new T[original.Count];
-	// 		original.CopyTo(arr, 0);
-	// 		Array.Reverse(arr);
-	// 		return new Stack<T>(arr);
-	// 	}
-	// }
 
 	class StackItem<T>
 	{
@@ -118,21 +106,13 @@ namespace Clones
 		StackItem<T> Head { get; set; }
 		public bool IsEmpty => Head == null;
 
-		// private Stack(IEnumerable<T> collection)
-		// {
-		// 	foreach (var e in collection)
-		// 		this.Push(e);
-		// }
-		
 		private Stack(StackItem<T> head, int count)
 		{
 			Count = count;
 			Head = head;
 		}
 
-		public Stack()
-		{
-		}
+		public Stack() { }
 
 		public IEnumerator<T> GetEnumerator()
 		{
@@ -144,20 +124,14 @@ namespace Clones
 			}
 		}
 	
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
 		public void Push(T value)
 		{
 			if (IsEmpty)
 				Head = new StackItem<T>(value, null);
 			else
-			{
-				var item = new StackItem<T>(value, Head);
-				Head = item;
-			}
+				Head = new StackItem<T>(value, Head);
 			Count++;
 		}
 	
@@ -176,11 +150,8 @@ namespace Clones
 			return Head.Value;
 		}
 	
-		public Stack<T> Clone()
-		{
-			return new Stack<T>(Head, Count);
-		}
-	
+		public Stack<T> Clone() => new Stack<T>(Head, Count);
+
 		public void Clear()
 		{
 			Head = null;
